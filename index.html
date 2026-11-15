@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>UTM Position</title>
+<style>
+:root{--bg:#F4F2EC;--card:#fff;--ink:#1B221F;--muted:#5B6560;--tile:#E9E6DD;--accent:#1F5C4A;--on-accent:#fff;--chip:#DDEBE3;--chip-ink:#17503E;--warn:#F6E3D6;--warn-ink:#7A3412;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121614;--card:#1C2220;--ink:#EDEFEA;--muted:#A3ADA7;--tile:#232B28;--accent:#5FB89A;--on-accent:#0C1411;--chip:#1F3A31;--chip-ink:#A7E0CB;--warn:#3A2418;--warn-ink:#F4C7A8}}
+:root[data-theme="dark"]{--bg:#121614;--card:#1C2220;--ink:#EDEFEA;--muted:#A3ADA7;--tile:#232B28;--accent:#5FB89A;--on-accent:#0C1411;--chip:#1F3A31;--chip-ink:#A7E0CB;--warn:#3A2418;--warn-ink:#F4C7A8}
+html{height:100%}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+main{max-width:440px;margin:0 auto;padding:24px 20px 32px;display:flex;flex-direction:column;gap:20px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+h1{margin:0;font-size:22px;font-weight:600}
+.chip{display:flex;align-items:center;gap:8px;background:var(--chip);color:var(--chip-ink);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:500;white-space:nowrap}
+.chip.warn{background:var(--warn);color:var(--warn-ink)}
+.card{background:var(--card);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:22px;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.meta{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--muted)}
+.meta b{letter-spacing:.08em;font-weight:600}
+.f{display:flex;flex-direction:column;gap:6px}
+.f label{font-size:13px;color:var(--muted)}
+.v{font-size:clamp(30px,10vw,40px);font-weight:700;line-height:1}
+.v small{font-size:18px;color:var(--muted);font-weight:500;margin-left:8px}
+.copy{display:flex;align-items:center;justify-content:center;gap:12px;min-height:64px;border:0;border-radius:16px;background:var(--accent);color:var(--on-accent);font:600 18px system-ui,-apple-system,sans-serif;cursor:pointer}
+.copy:disabled{opacity:.45;cursor:not-allowed}
+.copy:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.str{text-align:center;font-size:13px;color:var(--muted);margin-top:-8px;min-height:18px}
+.tiles{display:flex;gap:12px}
+.tile{flex:1;background:var(--tile);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.tile span:first-child{font-size:12px;color:var(--muted)}
+.tile span:last-child{font-size:13px;font-weight:500}
+.trow{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mini{display:flex;align-items:center;gap:6px;min-height:44px;margin:-8px -8px 0 0;padding:0 10px;border:0;border-radius:10px;background:transparent;color:var(--accent);font:600 13px system-ui,-apple-system,sans-serif;cursor:pointer}
+.mini:disabled{opacity:.45;cursor:not-allowed}
+.mini:focus-visible{outline:3px solid var(--ink);outline-offset:1px}
+#msg{font-size:14px;color:var(--warn-ink);background:var(--warn);border-radius:14px;padding:14px 16px;display:none;line-height:1.4}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>My position</h1>
+<div class="chip" id="chip" role="status" aria-live="polite">Locating…</div>
+</header>
+<div id="msg"></div>
+<section class="card" aria-label="UTM coordinates">
+<div class="meta"><b>UTM · WGS 84</b><span id="age">–</span></div>
+<div class="f"><label>Zone</label><div class="v mono" id="zone">––</div></div>
+<div class="f"><label>Easting</label><div class="v mono"><span id="e">––</span><small>m E</small></div></div>
+<div class="f"><label>Northing</label><div class="v mono"><span id="n">––</span><small>m N</small></div></div>
+</section>
+<button class="copy" id="copy" disabled>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>
+<span id="copyLabel">Copy coordinates</span>
+</button>
+<div class="str mono" id="str" aria-live="polite"></div>
+<div class="tiles">
+<div class="tile"><div class="trow"><span>Lat / Lon</span><button class="mini" id="copyLL" disabled aria-label="Copy latitude and longitude"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span id="copyLLLabel">Copy</span></button></div><span class="mono" id="ll">–</span></div>
+<div class="tile"><span>Altitude</span><span class="mono" id="alt">–</span></div>
+</div>
+</main>
+<script>
+(function(){
+var $=function(id){return document.getElementById(id)};
+var BANDS="CDEFGHJKLMNPQRSTUVWX";
+function toUTM(lat,lon){
+  if(lat<-80||lat>84)return null;
+  var zone=Math.floor((lon+180)/6)+1;
+  if(zone>60)zone=60;if(zone<1)zone=1;
+  var band=BANDS[Math.min(Math.floor((lat+80)/8),19)];
+  if(band==="V"&&zone===31&&lon>=3)zone=32;
+  if(band==="X"){
+    if(lon>=0&&lon<9)zone=31;else if(lon>=9&&lon<21)zone=33;
+    else if(lon>=21&&lon<33)zone=35;else if(lon>=33&&lon<42)zone=37;
+  }
+  var a=6378137,f=1/298.257223563,k0=0.9996,r=Math.PI/180;
+  var n=f/(2-f),n2=n*n,n3=n2*n,n4=n3*n;
+  var A=a/(1+n)*(1+n2/4+n4/64);
+  var al=[n/2-2*n2/3+5*n3/16,13*n2/48-3*n3/5,61*n3/240];
+  var e=Math.sqrt(f*(2-f));
+  var lam=(lon-((zone-1)*6-180+3))*r,phi=lat*r,s=Math.sin(phi);
+  var t=Math.sinh(Math.atanh(s)-e*Math.atanh(e*s));
+  var xi=Math.atan2(t,Math.cos(lam)),eta=Math.atanh(Math.sin(lam)/Math.sqrt(1+t*t));
+  var X=xi,Y=eta;
+  for(var j=1;j<=3;j++){
+    X+=al[j-1]*Math.sin(2*j*xi)*Math.cosh(2*j*eta);
+    Y+=al[j-1]*Math.cos(2*j*xi)*Math.sinh(2*j*eta);
+  }
+  var E=500000+k0*A*Y,N=k0*A*X;
+  if(lat<0)N+=10000000;
+  return {zone:zone,band:band,e:Math.round(E),n:Math.round(N)};
+}
+function grp(v){return String(v).replace(/\B(?=(\d{3})+(?!\d))/g,"\u202f")}
+var current="",currentLL="",last=0,tmr;
+function msg(t){var m=$("msg");m.style.display=t?"block":"none";m.textContent=t||""}
+function chip(t,warn){var c=$("chip");c.textContent=t;c.className="chip"+(warn?" warn":"")}
+function ok(p){
+  var c=p.coords,u=toUTM(c.latitude,c.longitude);
+  last=p.timestamp||Date.now();
+  if(!u){msg("UTM is only defined between 80°S and 84°N.");chip("Out of range",true);return}
+  msg("");
+  $("zone").textContent=u.zone+"\u2009"+u.band;
+  $("e").textContent=grp(u.e);
+  $("n").textContent=grp(u.n);
+  current=u.zone+u.band+" "+u.e+" "+u.n;
+  $("str").textContent=current;
+  $("ll").innerHTML=Math.abs(c.latitude).toFixed(4)+"° "+(c.latitude<0?"S":"N")+"<br>"+Math.abs(c.longitude).toFixed(4)+"° "+(c.longitude<0?"W":"E");
+  $("alt").innerHTML=c.altitude==null?"not provided<br>by device":Math.round(c.altitude)+" m"+(c.altitudeAccuracy!=null?"<br>±"+Math.round(c.altitudeAccuracy)+" m":"");
+  chip("GPS fix · ±"+Math.round(c.accuracy)+" m",false);
+  currentLL=c.latitude.toFixed(5)+", "+c.longitude.toFixed(5);
+  $("copy").disabled=false;
+  $("copyLL").disabled=false;
+}
+function fail(err){
+  var t={1:"Location access was denied. Allow it for this site in your browser settings, then reload.",2:"Position unavailable. Check that location services are on.",3:"Timed out waiting for a position. Trying again…"}[err.code]||"Could not get your position.";
+  msg(t);chip(err.code===3?"Searching…":"No fix",true);
+}
+function tick(){
+  if(!last){return}
+  var s=Math.max(0,Math.round((Date.now()-last)/1000));
+  $("age").textContent="Updated "+(s<2?"just now":s+" s ago");
+}
+if(!navigator.geolocation){
+  msg("This browser doesn’t support geolocation.");chip("Unsupported",true);
+}else{
+  navigator.geolocation.watchPosition(ok,fail,{enableHighAccuracy:true,maximumAge:2000,timeout:20000});
+  tmr=setInterval(tick,1000);
+}
+async function doCopy(txt){
+  try{await navigator.clipboard.writeText(txt);return true}catch(e){}
+  try{
+    var ta=document.createElement("textarea");ta.value=txt;ta.setAttribute("readonly","");
+    ta.style.cssText="position:fixed;top:0;left:0;opacity:0";
+    document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,txt.length);
+    var r=document.execCommand("copy");document.body.removeChild(ta);return r;
+  }catch(e){return false}
+}
+$("copy").addEventListener("click",async function(){
+  if(!current)return;
+  var done=await doCopy(current),l=$("copyLabel");
+  l.textContent=done?"Copied ✓":"Copy failed";
+  setTimeout(function(){l.textContent="Copy coordinates"},1800);
+});
+$("copyLL").addEventListener("click",async function(){
+  if(!currentLL)return;
+  var done=await doCopy(currentLL),l=$("copyLLLabel");
+  l.textContent=done?"Copied ✓":"Failed";
+  setTimeout(function(){l.textContent="Copy"},1800);
+});
+})();
+</script>
+</body>
+</html>
